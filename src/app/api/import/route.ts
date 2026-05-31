@@ -7,13 +7,24 @@ import { parseBillRow, splitCsv } from "@/lib/csv";
 
 const FIXTURE = path.join(process.cwd(), "fixtures", "bills.csv");
 
-export async function POST() {
-  const text = await fs.readFile(FIXTURE, "utf8");
-  const { rows } = splitCsv(text);
+async function importCsvText(text: string) {
+  const { headers, rows } = splitCsv(text);
+  const created: string[] = [];
+  const skipped: string[] = [];
 
-  const created = [];
   for (const r of rows) {
-    const b = parseBillRow(r);
+    const b = parseBillRow(headers, r);
+
+    if (b.invoiceNumber) {
+      const existing = await prisma.bill.findFirst({
+        where: { invoiceNumber: b.invoiceNumber },
+      });
+      if (existing) {
+        skipped.push(b.invoiceNumber);
+        continue;
+      }
+    }
+
     const bill = await prisma.bill.create({
       data: {
         vendorName: b.vendorName,
@@ -26,5 +37,31 @@ export async function POST() {
     created.push(bill.id);
   }
 
-  return NextResponse.json({ created });
+  return { created, skipped };
+}
+
+/** Import fixture CSV, or accept uploaded file via multipart form field "file". */
+export async function POST(request: Request) {
+  try {
+    const contentType = request.headers.get("content-type") ?? "";
+
+    if (contentType.includes("multipart/form-data")) {
+      const form = await request.formData();
+      const file = form.get("file");
+      if (!(file instanceof File)) {
+        return NextResponse.json(
+          { error: "Missing file field" },
+          { status: 400 },
+        );
+      }
+      const text = await file.text();
+      return NextResponse.json(await importCsvText(text));
+    }
+
+    const text = await fs.readFile(FIXTURE, "utf8");
+    return NextResponse.json(await importCsvText(text));
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Import failed";
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
 }

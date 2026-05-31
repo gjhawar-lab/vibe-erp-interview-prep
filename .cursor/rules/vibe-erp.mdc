@@ -1,0 +1,28 @@
+---
+description: Vibe ERP project context for Cursor Agent and Chat
+alwaysApply: true
+---
+
+# Vibe ERP
+
+Next.js 15 + TypeScript + Prisma (SQLite) AP/bills app for Campfire interview prep.
+
+## Key paths
+- `src/app/page.tsx` — dashboard (unpaid total)
+- `src/app/bills/` — bill list table
+- `src/app/import/` — CSV import UI
+- `src/app/api/import/route.ts` — import API
+- `lib/csv.ts` — CSV parsing (header-based: vendor, amount, due_date, invoice_number)
+- `lib/dates.ts` — daysPastDue()
+- `fixtures/bills.csv` — sample customer CSV
+- `docs/bill_format_spec.pdf.txt` — customer spec (may not match real CSV layout)
+
+## Stack conventions
+- Use `@/` path alias for imports from repo root
+- Server components fetch via Prisma directly; client components use `"use client"`
+- Money stored as Prisma Decimal; avoid parseFloat for totals
+- Dates: use parseDateOnly() for YYYY-MM-DD CSV values
+
+## Commands
+- `npm run dev` — start dev server (TZ=UTC)
+- `npm run reset` — wipe DB, migrate, seed

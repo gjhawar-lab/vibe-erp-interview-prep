@@ -1,0 +1,69 @@
+{
+  // ============================================================
+  // VIBE ERP — full Cursor + IDE assist (overrides global lockdown)
+  // ============================================================
+
+  // --- Cursor AI: Tab, inline completions, chat context ---
+  "cursor.completions.enabled": true,
+  "cursor.cpp.enabled": true,
+  "cursor.cpp.disabledLanguages": [],
+  "cursor.tab.enabled": true,
+  "cursor.chat.enableLargeContext": true,
+  "cursor.diffs.useCharacterLevelDiffs": true,
+  "cursor-retrieval.canAttemptGithubLogin": true,
+
+  // --- Standard IntelliSense (needed for Tab + TS to work well) ---
+  "editor.suggest.enabled": true,
+  "editor.quickSuggestions": {
+    "other": "on",
+    "comments": "off",
+    "strings": "on"
+  },
+  "editor.suggestOnTriggerCharacters": true,
+  "editor.acceptSuggestionOnEnter": "smart",
+  "editor.tabCompletion": "on",
+  "editor.wordBasedSuggestions": "matchingDocuments",
+  "editor.parameterHints.enabled": true,
+  "editor.inlineSuggest.enabled": true,
+  "editor.hover.enabled": true,
+  "editor.lightbulb.enabled": "on",
+  "editor.snippetSuggestions": "top",
+  "editor.codeLens": true,
+
+  // --- Helpful editor assists ---
+  "editor.autoClosingBrackets": "languageDefined",
+  "editor.autoClosingQuotes": "languageDefined",
+  "editor.autoClosingDelete": "languageDefined",
+  "editor.autoSurround": "languageDefined",
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+
+  // --- TypeScript / JavaScript ---
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.suggest.autoImports": true,
+  "typescript.suggest.completeFunctionCalls": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "typescript.inlayHints.parameterNames.enabled": "all",
+  "typescript.inlayHints.variableTypes.enabled": true,
+  "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
+  "javascript.suggest.autoImports": true,
+  "javascript.updateImportsOnFileMove.enabled": "always",
+
+  "[typescript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+
+  // --- Trust this workspace (required for some AI + terminal features) ---
+  "security.workspace.trust.enabled": true
+}

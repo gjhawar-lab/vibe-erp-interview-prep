@@ -1,13 +1,6 @@
 /**
- * Parse a bill CSV row into the shape we store.
- *
- * Column layout per the customer's PDF spec
- * (see docs/bill_format_spec.pdf.txt):
- *   col 1: Vendor Name
- *   col 2: Amount (USD)
- *   col 3: Due Date
- *   col 4: Invoice Number
- *   col 5+: shipping address, tax id, payment method — not used by us
+ * Parse a bill CSV row using column headers from the file.
+ * Fixture columns: vendor, amount, invoice_date, invoice_number, ..., due_date
  */
 
 export type ParsedBill = {
@@ -17,12 +10,30 @@ export type ParsedBill = {
   invoiceNumber: string;
 };
 
-export function parseBillRow(row: string[]): ParsedBill {
+/** Parse "2026-04-15" as a calendar date (no timezone shift). */
+export function parseDateOnly(isoDate: string): Date {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
+function getCell(headers: string[], row: string[], columnName: string): string {
+  const index = headers.indexOf(columnName);
+  if (index === -1) {
+    throw new Error(`Missing column: ${columnName}`);
+  }
+  const value = row[index]?.trim();
+  if (!value) {
+    throw new Error(`Empty value for column: ${columnName}`);
+  }
+  return value;
+}
+
+export function parseBillRow(headers: string[], row: string[]): ParsedBill {
   return {
-    vendorName: row[0],
-    amount: row[1],
-    dueDate: new Date(row[2]),
-    invoiceNumber: row[3],
+    vendorName: getCell(headers, row, "vendor"),
+    amount: getCell(headers, row, "amount"),
+    dueDate: parseDateOnly(getCell(headers, row, "due_date")),
+    invoiceNumber: getCell(headers, row, "invoice_number"),
   };
 }
 

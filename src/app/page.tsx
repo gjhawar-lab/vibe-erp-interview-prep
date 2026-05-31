@@ -1,11 +1,13 @@
 import { prisma } from "@/lib/db";
+import { formatUsd, sumDecimalStrings } from "@/lib/money";
 import Link from "next/link";
 import { UserIcon } from "@heroicons/react/16/solid";
 
 export default async function Home() {
   const user = await prisma.user.findFirst({ orderBy: { createdAt: "desc" } });
   const bills = await prisma.bill.findMany({ where: { paid: false } });
-  const total = bills.reduce((sum, b) => sum + Number(b.amount), 0);
+  const total = sumDecimalStrings(bills.map((b) => b.amount.toString()));
+  const overdueCount = bills.filter((b) => b.dueDate < new Date()).length;
 
   return (
     <div>
@@ -23,11 +25,17 @@ export default async function Home() {
       <div className="p-8">
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <div className="mt-4 text-lg">
-          Total Outstanding: ${total}
+          Total Outstanding: ${formatUsd(total)}
+        </div>
+        <div className="mt-2 text-gray-600">
+          {overdueCount} overdue bill{overdueCount === 1 ? "" : "s"}
         </div>
         <div className="mt-6 flex gap-4">
           <Link href="/bills" className="text-blue-600 underline">
             View bills →
+          </Link>
+          <Link href="/bills?filter=overdue" className="text-blue-600 underline">
+            Overdue bills →
           </Link>
           <Link href="/import" className="text-blue-600 underline">
             Import bills →
