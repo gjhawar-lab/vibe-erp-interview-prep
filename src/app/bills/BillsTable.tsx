@@ -1,6 +1,6 @@
 "use client";
 
-import { daysPastDue } from "@/lib/dates";
+import { daysPastDue, formatDateOnly } from "@/lib/dates";
 
 export type BillRow = {
   id: string;
@@ -11,40 +11,43 @@ export type BillRow = {
   paid: boolean;
 };
 
-export default function BillsTable({ bills }: { bills: BillRow[] }) {
+export default function BillsTable({
+  bills,
+  refreshedAt, // computed on the server so SSR and client hydration match
+}: {
+  bills: BillRow[];
+  refreshedAt: string;
+}) {
   return (
     <>
-    <p className="mt-2 text-sm text-gray-500">
-      Last refreshed: {new Date().toISOString()}
-    </p>
-    <table className="mt-2 w-full">
-      <thead>
-        <tr className="border-b bg-gray-50">
-          <th className="p-2 text-left">Vendor</th>
-          <th className="p-2 text-left">Invoice #</th>
-          <th className="p-2 text-left">Due Date</th>
-          <th className="p-2 text-left">Days Past Due</th>
-          <th className="p-2 text-right">Amount</th>
-          <th className="p-2 text-left">Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {bills.map((b) => (
-          <tr key={b.id} className="border-b">
-            <td className="p-2">{b.vendorName}</td>
-            <td className="p-2">{b.invoiceNumber ?? "—"}</td>
-            <td className="p-2">
-              {new Date(b.dueDate).toLocaleDateString()}
-            </td>
-            <td className="p-2">
-              {b.paid ? "—" : daysPastDue(new Date(b.dueDate))}
-            </td>
-            <td className="p-2 text-right">${b.amount}</td>
-            <td className="p-2">{b.paid ? "Paid" : "Unpaid"}</td>
+      <p className="mt-2 text-sm text-gray-500">Last refreshed: {refreshedAt}</p>
+      <table className="mt-2 w-full">
+        <thead>
+          <tr className="border-b bg-gray-50">
+            <th className="p-2 text-left">Vendor</th>
+            <th className="p-2 text-left">Invoice #</th>
+            <th className="p-2 text-left">Due Date</th>
+            <th className="p-2 text-left">Days Past Due</th>
+            <th className="p-2 text-right">Amount</th>
+            <th className="p-2 text-left">Status</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {bills.map((b) => {
+            const dpd = b.paid ? null : daysPastDue(new Date(b.dueDate));
+            return (
+              <tr key={b.id} className="border-b">
+                <td className="p-2">{b.vendorName}</td>
+                <td className="p-2">{b.invoiceNumber ?? "—"}</td>
+                <td className="p-2">{formatDateOnly(b.dueDate)}</td>
+                <td className="p-2">{dpd || "—"}</td>
+                <td className="p-2 text-right">${b.amount}</td>
+                <td className="p-2">{b.paid ? "Paid" : "Unpaid"}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </>
   );
 }

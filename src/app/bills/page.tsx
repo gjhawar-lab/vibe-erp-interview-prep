@@ -20,7 +20,7 @@ export default async function BillsPage() {
         ← Dashboard
       </Link>
       <h1 className="mt-4 text-2xl font-bold">Bills</h1>
-      <BillsTable bills={rows} />
+      <BillsTable bills={rows} refreshedAt={new Date().toISOString()} />
     </div>
   );
 }

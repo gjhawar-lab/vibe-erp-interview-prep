@@ -1,11 +1,16 @@
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import Link from "next/link";
 import { UserIcon } from "@heroicons/react/16/solid";
 
 export default async function Home() {
   const user = await prisma.user.findFirst({ orderBy: { createdAt: "desc" } });
   const bills = await prisma.bill.findMany({ where: { paid: false } });
-  const total = bills.reduce((sum, b) => sum + Number(b.amount), 0);
+
+  // Sum as Decimal and round once. Never convert money to a JS float.
+  const total = bills
+    .reduce((sum, b) => sum.plus(b.amount), new Prisma.Decimal(0))
+    .toFixed(2);
 
   return (
     <div>

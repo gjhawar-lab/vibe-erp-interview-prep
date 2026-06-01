@@ -9,11 +9,11 @@ const FIXTURE = path.join(process.cwd(), "fixtures", "bills.csv");
 
 export async function POST() {
   const text = await fs.readFile(FIXTURE, "utf8");
-  const { rows } = splitCsv(text);
+  const { headers, rows } = splitCsv(text);
 
-  const created = [];
+  const created: string[] = [];
   for (const r of rows) {
-    const b = parseBillRow(r);
+    const b = parseBillRow(headers, r);
     const bill = await prisma.bill.create({
       data: {
         vendorName: b.vendorName,
