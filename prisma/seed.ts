@@ -63,7 +63,7 @@ async function main() {
     // page uses. Mirrors a real ingestion run on a fresh DB.
     const csvPath = path.join(process.cwd(), "fixtures", "bills.csv");
     const text = await fs.readFile(csvPath, "utf8");
-    const { rows } = splitCsv(text);
+    const rows = splitCsv(text);
     for (const r of rows) {
       const b = parseBillRow(r);
       await prisma.bill.create({

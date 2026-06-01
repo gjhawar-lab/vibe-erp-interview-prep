@@ -25,4 +25,8 @@ model Bill {
   invoiceNumber String?
   paid          Boolean  @default(false)
   createdAt     DateTime @default(now())
+
+  // An invoice number is unique per vendor, not globally: two vendors may both
+  // use "INV-001". This scopes dedupe correctly and powers upsert on import.
+  @@unique([vendorName, invoiceNumber])
 }

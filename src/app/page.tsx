@@ -1,11 +1,21 @@
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import Link from "next/link";
 import { UserIcon } from "@heroicons/react/16/solid";
 
 export default async function Home() {
   const user = await prisma.user.findFirst({ orderBy: { createdAt: "desc" } });
   const bills = await prisma.bill.findMany({ where: { paid: false } });
-  const total = bills.reduce((sum, b) => sum + Number(b.amount), 0);
+
+  // FIX (money): sum with Prisma.Decimal, round once. Never use a JS float.
+  //   BUG: reduce((s, b) => s + Number(b.amount), 0) drifts —
+  //        e.g. 0.1 + 0.2 === 0.30000000000000004; amounts like 99.995 misround.
+  //   EXAMPLE: three unpaid bills of 99.995
+  //     float:            299.985000...   (messy / wrong cents)
+  //     Decimal.toFixed:  "299.99"
+  const total = bills
+    .reduce((sum, b) => sum.plus(b.amount), new Prisma.Decimal(0))
+    .toFixed(2);
 
   return (
     <div>

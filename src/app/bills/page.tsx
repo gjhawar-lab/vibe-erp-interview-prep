@@ -20,7 +20,13 @@ export default async function BillsPage() {
         ← Dashboard
       </Link>
       <h1 className="mt-4 text-2xl font-bold">Bills</h1>
-      <BillsTable bills={rows} />
+      {/*
+        FIX (hydration): "Last refreshed" should mean "when this data was read".
+        This page is dynamic (Prisma runs per request), so the server timestamp
+        is the correct value. Computing it here and passing it down keeps the
+        server HTML and client hydration identical — no hydration mismatch.
+      */}
+      <BillsTable bills={rows} refreshedAt={new Date().toISOString()} />
     </div>
   );
 }
