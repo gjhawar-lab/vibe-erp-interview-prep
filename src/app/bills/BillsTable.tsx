@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { daysPastDue, formatDateOnly } from "@/lib/dates";
+import { formatUsd } from "@/lib/money";
 
 export type BillRow = {
   id: string;
@@ -13,7 +14,14 @@ export type BillRow = {
   paid: boolean;
 };
 
-export default function BillsTable({ bills }: { bills: BillRow[] }) {
+type Props = {
+  bills: BillRow[];
+  /** Set on the server so client hydration matches (avoids new Date() mismatch). */
+  refreshedAt: string;
+};
+
+/** Client component — needs "use client" for onClick buttons and router.refresh(). */
+export default function BillsTable({ bills, refreshedAt }: Props) {
   const router = useRouter();
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
@@ -29,9 +37,7 @@ export default function BillsTable({ bills }: { bills: BillRow[] }) {
 
   return (
     <>
-      <p className="mt-2 text-sm text-gray-500">
-        Last refreshed: {new Date().toISOString()}
-      </p>
+      <p className="mt-2 text-sm text-gray-500">Last refreshed: {refreshedAt}</p>
       <table className="mt-2 w-full">
         <thead>
           <tr className="border-b bg-gray-50">
@@ -46,18 +52,16 @@ export default function BillsTable({ bills }: { bills: BillRow[] }) {
         </thead>
         <tbody>
           {bills.map((b) => {
-            const overdue =
-              !b.paid && daysPastDue(new Date(b.dueDate)) > 0
-                ? daysPastDue(new Date(b.dueDate))
-                : null;
+            const days = b.paid ? 0 : daysPastDue(new Date(b.dueDate));
+            const overdueDisplay = b.paid ? "—" : days > 0 ? days : "—";
 
             return (
               <tr key={b.id} className="border-b">
                 <td className="p-2">{b.vendorName}</td>
                 <td className="p-2">{b.invoiceNumber ?? "—"}</td>
                 <td className="p-2">{formatDateOnly(b.dueDate)}</td>
-                <td className="p-2">{b.paid ? "—" : overdue ?? "—"}</td>
-                <td className="p-2 text-right">${b.amount}</td>
+                <td className="p-2">{overdueDisplay}</td>
+                <td className="p-2 text-right">${formatUsd(b.amount)}</td>
                 <td className="p-2">{b.paid ? "Paid" : "Unpaid"}</td>
                 <td className="p-2">
                   {!b.paid && (

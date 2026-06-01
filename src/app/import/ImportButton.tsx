@@ -3,12 +3,16 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
+/** Client component — handles button clicks and file upload. */
 export default function ImportButton() {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<string>("");
+  const [loading, setLoading] = useState(false);
 
   async function runImport(useFile: boolean) {
+    if (loading) return;
+    setLoading(true);
     setStatus("Importing...");
     try {
       let res: Response;
@@ -34,6 +38,8 @@ export default function ImportButton() {
       router.refresh();
     } catch {
       setStatus("Error: Import failed");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -42,18 +48,25 @@ export default function ImportButton() {
       <div>
         <button
           onClick={() => runImport(false)}
-          className="rounded bg-blue-600 px-4 py-2 text-white"
+          disabled={loading}
+          className="rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-50"
         >
-          Import fixture CSV
+          {loading ? "Importing…" : "Import fixture CSV"}
         </button>
       </div>
       <div className="flex flex-wrap items-center gap-3">
-        <input ref={fileRef} type="file" accept=".csv,text/csv" />
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".csv,text/csv"
+          disabled={loading}
+        />
         <button
           onClick={() => runImport(true)}
-          className="rounded bg-blue-600 px-4 py-2 text-white"
+          disabled={loading}
+          className="rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-50"
         >
-          Upload CSV
+          {loading ? "Importing…" : "Upload CSV"}
         </button>
       </div>
       {status && <p className="text-sm text-gray-700">{status}</p>}

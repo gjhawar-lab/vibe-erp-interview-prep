@@ -22,7 +22,7 @@ model Bill {
   vendorName    String
   amount        Decimal
   dueDate       DateTime
-  invoiceNumber String?
+  invoiceNumber String? @unique
   paid          Boolean  @default(false)
   createdAt     DateTime @default(now())
 }

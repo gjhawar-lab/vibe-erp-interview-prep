@@ -7,6 +7,7 @@ import { parseBillRow, splitCsv } from "@/lib/csv";
 
 const FIXTURE = path.join(process.cwd(), "fixtures", "bills.csv");
 
+/** Shared import logic for fixture file and uploaded CSV. */
 async function importCsvText(text: string) {
   const { headers, rows } = splitCsv(text);
   const created: string[] = [];
@@ -15,6 +16,7 @@ async function importCsvText(text: string) {
   for (const r of rows) {
     const b = parseBillRow(headers, r);
 
+    // Skip duplicate imports — same invoice # already in DB
     if (b.invoiceNumber) {
       const existing = await prisma.bill.findFirst({
         where: { invoiceNumber: b.invoiceNumber },
@@ -25,22 +27,39 @@ async function importCsvText(text: string) {
       }
     }
 
-    const bill = await prisma.bill.create({
-      data: {
-        vendorName: b.vendorName,
-        amount: new Prisma.Decimal(b.amount),
-        dueDate: b.dueDate,
-        invoiceNumber: b.invoiceNumber,
-        paid: false,
-      },
-    });
-    created.push(bill.id);
+    try {
+      const bill = await prisma.bill.create({
+        data: {
+          vendorName: b.vendorName,
+          amount: new Prisma.Decimal(b.amount),
+          dueDate: b.dueDate,
+          invoiceNumber: b.invoiceNumber,
+          paid: false,
+        },
+      });
+      created.push(bill.id);
+    } catch (err) {
+      // Unique constraint on invoiceNumber — handles concurrent double-submit
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === "P2002" &&
+        b.invoiceNumber
+      ) {
+        skipped.push(b.invoiceNumber);
+        continue;
+      }
+      throw err;
+    }
   }
 
   return { created, skipped };
 }
 
-/** Import fixture CSV, or accept uploaded file via multipart form field "file". */
+/**
+ * POST /api/import
+ * - No body: reads fixtures/bills.csv from disk (dev/demo button)
+ * - multipart/form-data with "file": reads uploaded CSV from browser
+ */
 export async function POST(request: Request) {
   try {
     const contentType = request.headers.get("content-type") ?? "";
@@ -58,6 +77,7 @@ export async function POST(request: Request) {
       return NextResponse.json(await importCsvText(text));
     }
 
+    // Default: import the bundled fixture file
     const text = await fs.readFile(FIXTURE, "utf8");
     return NextResponse.json(await importCsvText(text));
   } catch (err) {

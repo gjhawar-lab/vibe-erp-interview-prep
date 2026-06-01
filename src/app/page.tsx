@@ -3,9 +3,12 @@ import { formatUsd, sumDecimalStrings } from "@/lib/money";
 import Link from "next/link";
 import { UserIcon } from "@heroicons/react/16/solid";
 
+/** Server component — dashboard totals computed on the server from Prisma. */
 export default async function Home() {
   const user = await prisma.user.findFirst({ orderBy: { createdAt: "desc" } });
   const bills = await prisma.bill.findMany({ where: { paid: false } });
+
+  // Sum in cents to avoid float drift (see lib/money.ts)
   const total = sumDecimalStrings(bills.map((b) => b.amount.toString()));
   const overdueCount = bills.filter((b) => b.dueDate < new Date()).length;
 

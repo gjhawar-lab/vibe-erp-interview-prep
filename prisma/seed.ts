@@ -63,6 +63,7 @@ async function main() {
     // page uses. Mirrors a real ingestion run on a fresh DB.
     const csvPath = path.join(process.cwd(), "fixtures", "bills.csv");
     const text = await fs.readFile(csvPath, "utf8");
+    // Pass headers from line 1 — same as /api/import route
     const { headers, rows } = splitCsv(text);
     for (const r of rows) {
       const b = parseBillRow(headers, r);

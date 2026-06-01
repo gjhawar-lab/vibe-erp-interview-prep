@@ -6,6 +6,7 @@ type Props = {
   searchParams: Promise<{ filter?: string }>;
 };
 
+/** Server component — reads bills from DB, passes rows to client table. */
 export default async function BillsPage({ searchParams }: Props) {
   const { filter } = await searchParams;
   const now = new Date();
@@ -16,7 +17,9 @@ export default async function BillsPage({ searchParams }: Props) {
         ? { paid: false, dueDate: { lt: now } }
         : filter === "unpaid"
           ? { paid: false }
-          : undefined,
+          : filter === "paid"
+            ? { paid: true }
+            : undefined,
     orderBy: { dueDate: "asc" },
   });
 
@@ -51,6 +54,14 @@ export default async function BillsPage({ searchParams }: Props) {
           Unpaid
         </Link>
         <Link
+          href="/bills?filter=paid"
+          className={
+            filter === "paid" ? "font-bold underline" : "text-blue-600 underline"
+          }
+        >
+          Paid
+        </Link>
+        <Link
           href="/bills?filter=overdue"
           className={
             filter === "overdue" ? "font-bold underline" : "text-blue-600 underline"
@@ -59,7 +70,7 @@ export default async function BillsPage({ searchParams }: Props) {
           Overdue
         </Link>
       </div>
-      <BillsTable bills={rows} />
+      <BillsTable bills={rows} refreshedAt={now.toISOString()} />
     </div>
   );
 }
