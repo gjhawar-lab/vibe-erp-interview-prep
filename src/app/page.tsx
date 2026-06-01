@@ -7,7 +7,12 @@ export default async function Home() {
   const user = await prisma.user.findFirst({ orderBy: { createdAt: "desc" } });
   const bills = await prisma.bill.findMany({ where: { paid: false } });
 
-  // Sum as Decimal and round once. Never convert money to a JS float.
+  // FIX (money): sum with Prisma.Decimal, then round once. Never use a JS float.
+  //   BUG: bills.reduce((s, b) => s + Number(b.amount), 0) drifts —
+  //        e.g. 0.1 + 0.2 === 0.30000000000000004, and amounts like 99.995 misround.
+  //   EXAMPLE: three unpaid bills of 99.995
+  //     before (float):            299.985000...   -> messy / wrong cents
+  //     after  (Decimal.toFixed):  "299.99"
   const total = bills
     .reduce((sum, b) => sum.plus(b.amount), new Prisma.Decimal(0))
     .toFixed(2);

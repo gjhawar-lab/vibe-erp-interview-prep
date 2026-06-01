@@ -11,9 +11,12 @@ export type BillRow = {
   paid: boolean;
 };
 
+// `refreshedAt` comes from the server (see bills/page.tsx). Because the server HTML and
+// the client hydration render the SAME string, there's no "Text content did not match"
+// hydration warning — which calling new Date() in here would cause.
 export default function BillsTable({
   bills,
-  refreshedAt, // computed on the server so SSR and client hydration match
+  refreshedAt,
 }: {
   bills: BillRow[];
   refreshedAt: string;
@@ -34,12 +37,15 @@ export default function BillsTable({
         </thead>
         <tbody>
           {bills.map((b) => {
+            // null when paid; daysPastDue() already clamps not-yet-due bills to 0.
             const dpd = b.paid ? null : daysPastDue(new Date(b.dueDate));
             return (
               <tr key={b.id} className="border-b">
                 <td className="p-2">{b.vendorName}</td>
                 <td className="p-2">{b.invoiceNumber ?? "—"}</td>
+                {/* UTC display so the date never shifts a day (see lib/dates.ts) */}
                 <td className="p-2">{formatDateOnly(b.dueDate)}</td>
+                {/* 0 (not overdue) and null (paid) both render as a dash */}
                 <td className="p-2">{dpd || "—"}</td>
                 <td className="p-2 text-right">${b.amount}</td>
                 <td className="p-2">{b.paid ? "Paid" : "Unpaid"}</td>

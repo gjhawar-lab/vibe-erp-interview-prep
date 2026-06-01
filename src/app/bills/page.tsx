@@ -20,6 +20,11 @@ export default async function BillsPage() {
         ← Dashboard
       </Link>
       <h1 className="mt-4 text-2xl font-bold">Bills</h1>
+      {/*
+        FIX (hydration): compute the timestamp HERE on the server and pass it as a
+        prop. If the client component called new Date() itself, the server-render time
+        and the browser-hydration time would differ and React would warn.
+      */}
       <BillsTable bills={rows} refreshedAt={new Date().toISOString()} />
     </div>
   );

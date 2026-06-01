@@ -9,6 +9,9 @@ const FIXTURE = path.join(process.cwd(), "fixtures", "bills.csv");
 
 export async function POST() {
   const text = await fs.readFile(FIXTURE, "utf8");
+
+  // FIX (TICKET-104 plumbing): pull `headers` from the CSV and pass them to
+  // parseBillRow, so columns are resolved by name rather than position.
   const { headers, rows } = splitCsv(text);
 
   const created: string[] = [];
